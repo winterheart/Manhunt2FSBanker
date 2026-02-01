@@ -10,8 +10,6 @@ namespace MH2FSB {
 class FileContainer {
   public:
     virtual ~FileContainer() = default;
-    virtual void Serialize(std::istream &output);
-    virtual void Deserialize(const std::ostream &input);
 };
 
 } // MH2FSB
