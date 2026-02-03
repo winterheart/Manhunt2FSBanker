@@ -8,6 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 configure_file(manhunt2fsbanker_version.h.in manhunt2fsbanker_version.h)
 
 add_library(File
+  File/ContextMapBin.cpp
   File/SpeechLst.cpp
 )
 target_include_directories(File PUBLIC
