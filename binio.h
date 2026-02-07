@@ -33,6 +33,8 @@ std::istream &bin_read(std::istream &input, T &value, size_t n) {
   case 8:
     value = convert_le<uint64_t>(value);
     break;
+  default:
+    break;
   }
   return input;
 }
@@ -77,6 +79,9 @@ std::ostream &bin_write(std::ostream &output, T &value, size_t n) {
     break;
   case 8:
     write_value = convert_le<uint64_t>(value);
+    break;
+  default:
+    write_value = value;
     break;
   }
   output.write(reinterpret_cast<char *>(&write_value), n);
