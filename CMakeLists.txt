@@ -9,9 +9,11 @@ configure_file(manhunt2fsbanker_version.h.in manhunt2fsbanker_version.h)
 
 add_library(File
   File/ContextMapBin.cpp
+  File/Fsb.cpp
   File/SpeechLst.cpp
 )
 target_include_directories(File PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/File>
 )
 

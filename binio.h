@@ -11,7 +11,7 @@
 
 namespace UTILS {
 
-template <class T, typename = std::enable_if_t<std::is_integral_v<T>>>
+template <class T, typename = std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>>>
 /**
  * Reads from stream n bytes and interpreted them as LE integer
  * @tparam T
@@ -39,7 +39,7 @@ std::istream &bin_read(std::istream &input, T &value, size_t n) {
   return input;
 }
 
-template <class T, typename = std::enable_if_t<std::is_integral_v<T>>>
+template <class T, typename = std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>>>
 /**
  * Lightweight variant, read from stream sizeof(T) bytes and interpreted them as LE integer
  * @tparam T
@@ -54,7 +54,7 @@ std::istream &bin_read(std::istream &input, T &value) {
 inline std::istream &bin_read(std::istream &input, std::string &value, size_t n) {
   std::vector<char> buffer;
   buffer.resize(n);
-  input.read(buffer.data(), 32);
+  input.read(buffer.data(), n);
   value = std::string(buffer.data());
   return input;
 }
