@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+option(MANHUNT2_INSTALL_PATH "Manhunt 2 installation path (required for testing)")
+
 configure_file(manhunt2fsbanker_version.h.in manhunt2fsbanker_version.h)
 
 add_library(File
@@ -30,6 +32,10 @@ target_link_options(manhunt2fsbanker PRIVATE
 )
 
 if(BUILD_TESTING)
+  if(NOT IS_DIRECTORY ${MANHUNT2_INSTALL_PATH})
+    message(FATAL_ERROR "MANHUNT2_INSTALL_PATH does not exists!")
+  endif()
+  message(STATUS "Samples dir: ${MANHUNT2_INSTALL_PATH}")
   find_package(GTest REQUIRED)
   enable_testing()
   include(GoogleTest)

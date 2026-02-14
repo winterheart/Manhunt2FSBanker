@@ -10,7 +10,7 @@
 TEST(Manhunt2FSBanker, SpeechLst) {
   auto speech_lst_tmp_file = std::filesystem::temp_directory_path() / "speech.lst";
 
-  std::fstream speech_lst_stream("Samples/speech.lst", std::ios::binary | std::ios::in);
+  std::fstream speech_lst_stream("levels/A01_Escape_Asylum/speech.lst", std::ios::binary | std::ios::in);
   std::fstream speech_lst_stream_out(speech_lst_tmp_file, std::ios::binary | std::ios::out);
 
   ASSERT_TRUE(speech_lst_stream.is_open());
@@ -18,6 +18,6 @@ TEST(Manhunt2FSBanker, SpeechLst) {
   speech_lst_stream >> speech_lst;
   speech_lst_stream_out << speech_lst;
   speech_lst_stream_out.close();
-  EXPECT_TRUE(compare_files("Samples/speech.lst", speech_lst_tmp_file));
+  EXPECT_TRUE(compare_files("levels/A01_Escape_Asylum/speech.lst", speech_lst_tmp_file));
   std::filesystem::remove(speech_lst_tmp_file);
 }
