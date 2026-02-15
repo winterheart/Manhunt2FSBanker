@@ -2,13 +2,27 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
 
 #include <cassert>
+#include <format>
 #include <fstream>
+#include <iostream>
 
-#include "Fsb.h"
 #include "binio.h"
+#include "DirNames.h"
+#include "Fsb.h"
 
 
 namespace MH2FSB {
+
+void Fsb::ResolveRealNames(const Dir &dir) {
+  for (size_t i = 0; i < m_samples.size(); i++) {
+    std::string name = Crc32ResolveNames::getInstance().getName(dir.GetEntriesId(i));
+    if (name.empty()) {
+      name = std::format("unknown\\unknown_{:08x}\\pc_stream.wav", dir.GetEntriesId(i));
+      std::cout << std::format("{:08x} has no resolved name, set to {}!", dir.GetEntriesId(i), name) << std::endl;
+    }
+    m_samples.at(i).SetRealName(name);
+  }
+}
 
 /* FsbHeader IO */
 

@@ -11,6 +11,9 @@ configure_file(manhunt2fsbanker_version.h.in manhunt2fsbanker_version.h)
 
 add_library(File
   File/ContextMapBin.cpp
+  File/CRC32.cpp
+  File/Dir.cpp
+  File/DirNames.cpp
   File/Fsb.cpp
   File/SpeechLst.cpp
 )

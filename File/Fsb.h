@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <vector>
 
+#include "Dir.h"
 #include "FileContainer.h"
 
 #pragma pack(2)
@@ -121,10 +122,18 @@ class FsbSampleHeader {
 public:
   FsbSampleHeader(uint32_t headerversion, bool is_basicheader)
       : m_headerversion(headerversion), m_is_basicheader(is_basicheader) {}
+  void SetRealName(const std::string &realname) { m_realname = realname; }
+  [[nodiscard]] std::string GetRealName() const { return m_realname; }
 
 private:
+  /// Generated attributes
+
+  /// Version of FSB file
   uint32_t m_headerversion;
+  /// Is basic header? (use only m_lengthsamples and m_lengthcompressedbytes)
   bool m_is_basicheader;
+  /// Real name of sample
+  std::string m_realname;
 
   uint16_t m_size = 0;
   std::string m_name;
@@ -158,6 +167,10 @@ private:
 /// Based on fsbext 0.3.8 (https://aluigi.altervista.org/search.php?src=fsbext)
 /// Only FSB3 and FSB4 are implemented, since Manhunt 2 only uses these versions.
 class Fsb : public FileContainer {
+public:
+  std::vector<FsbSampleHeader> GetSamples() { return m_samples; }
+  void ResolveRealNames(const Dir &dir);
+private:
   FsbHeader m_header;
   std::vector<FsbSampleHeader> m_samples;
 
