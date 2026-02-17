@@ -16,6 +16,7 @@ add_library(File
   File/DirNames.cpp
   File/Fsb.cpp
   File/SpeechLst.cpp
+  File/Wav.cpp
 )
 target_include_directories(File PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>

@@ -15,12 +15,31 @@ namespace MH2FSB {
 
 void Fsb::ResolveRealNames(const Dir &dir) {
   for (size_t i = 0; i < m_samples.size(); i++) {
-    std::string name = Crc32ResolveNames::getInstance().getName(dir.GetEntriesId(i));
+    uint32_t crc32 = dir.GetEntriesId(i);
+    std::string name = Crc32ResolveNames::getInstance().getName(crc32);
     if (name.empty()) {
-      name = std::format("unknown\\unknown_{:08x}\\pc_stream.wav", dir.GetEntriesId(i));
-      std::cout << std::format("{:08x} has no resolved name, set to {}!", dir.GetEntriesId(i), name) << std::endl;
+      // Failed to resolve, mark it as unknown
+      name = std::format(R"(scripted\unknown\unknown_{:08x}\pc_stream.wav)", crc32);
+      // std::cout << std::format("{:08x} has no resolved name, set to {}!", crc32, name) << std::endl;
+      if (m_callback_on_unknown_hash) {
+        m_callback_on_unknown_hash(crc32);
+      }
     }
-    m_samples.at(i).SetRealName(name);
+    std::ranges::replace(name, '\\', '/');
+    // Remove parent path
+    std::filesystem::path result = name;
+    auto it = result.begin();
+    if (it != result.end()) {
+      ++it;
+    }
+    std::filesystem::path out;
+    for (; it != result.end(); ++it) {
+      out /= *it;
+    }
+    out = out.parent_path().replace_extension(".wav");
+    result = std::format("{:04}_{}", i, out.filename().string());
+
+    m_samples.at(i).SetRealName(out.parent_path() / result);
   }
 }
 
@@ -109,6 +128,8 @@ std::ostream &operator<<(std::ostream &out, Fsb &c) {
 
 std::istream &operator>>(std::istream &in, Fsb &c) {
   in >> c.m_header;
+  auto header_size = c.m_header.m_version == FSOUND_FSB_VERSION_3_1 ? 24 : 48;
+  size_t offset = c.m_header.m_shdrsize + header_size;
 
   FsbSampleHeader sample_header(c.m_header.m_version, false);
   for (int32_t i = 0; i < c.m_header.m_numsamples; i++) {
@@ -116,6 +137,8 @@ std::istream &operator>>(std::istream &in, Fsb &c) {
       sample_header.m_is_basicheader = true;
     }
     in >> sample_header;
+    sample_header.m_offset = offset;
+    offset += sample_header.m_lengthcompressedbytes;
     c.m_samples.push_back(sample_header);
   }
 

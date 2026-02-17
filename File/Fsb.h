@@ -3,9 +3,12 @@
 
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <filesystem>
+#include <functional>
+#include <utility>
 #include <vector>
 
 #include "Dir.h"
@@ -122,8 +125,20 @@ class FsbSampleHeader {
 public:
   FsbSampleHeader(uint32_t headerversion, bool is_basicheader)
       : m_headerversion(headerversion), m_is_basicheader(is_basicheader) {}
+
   void SetRealName(const std::string &realname) { m_realname = realname; }
+
   [[nodiscard]] std::string GetRealName() const { return m_realname; }
+
+  [[nodiscard]] uint32_t GetOffset() const { return m_offset; }
+
+  [[nodiscard]] uint32_t GetSize() const { return m_lengthcompressedbytes; }
+
+  [[nodiscard]] uint32_t GetMode() const { return m_mode; }
+
+  [[nodiscard]] uint32_t GetChannels() const { return m_numchannels; }
+
+  [[nodiscard]] uint32_t GetFrequency() const { return m_deffreq; }
 
 private:
   /// Generated attributes
@@ -133,7 +148,9 @@ private:
   /// Is basic header? (use only m_lengthsamples and m_lengthcompressedbytes)
   bool m_is_basicheader;
   /// Real name of sample
-  std::string m_realname;
+  std::filesystem::path m_realname;
+  /// Offset to begin of sample
+  uint32_t m_offset = 0;
 
   uint16_t m_size = 0;
   std::string m_name;
