@@ -18,7 +18,7 @@ RIB format. See "File types" section for the reference.
 ## Compilation
 
 Project requires any modern C++20 compiler (gcc 10, clang 10, msvc 2019),
-cmake and [rapidyaml library](https://github.com/biojppm/rapidyaml/) as
+cmake and [yaml-cpp library](https://github.com/jbeder/yaml-cpp) as
 dependency.
 
 ```shell

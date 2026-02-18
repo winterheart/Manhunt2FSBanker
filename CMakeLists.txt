@@ -7,6 +7,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(MANHUNT2_INSTALL_PATH "Manhunt 2 installation path (required for testing)")
 
+find_package(yaml-cpp REQUIRED)
+
 configure_file(manhunt2fsbanker_version.h.in manhunt2fsbanker_version.h)
 
 add_library(File
@@ -23,7 +25,7 @@ target_include_directories(File PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/File>
 )
 target_link_libraries(File PUBLIC
-  ryml::ryml
+  yaml-cpp::yaml-cpp
 )
 
 add_executable(manhunt2fsbanker
