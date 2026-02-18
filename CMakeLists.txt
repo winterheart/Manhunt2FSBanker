@@ -22,6 +22,9 @@ target_include_directories(File PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/File>
 )
+target_link_libraries(File PUBLIC
+  ryml::ryml
+)
 
 add_executable(manhunt2fsbanker
   main.cpp
