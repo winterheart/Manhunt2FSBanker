@@ -13,6 +13,7 @@
 
 #include "Dir.h"
 #include "FileContainer.h"
+#include "YAMLHelpers.h"
 
 #pragma pack(2)
 
@@ -20,6 +21,7 @@ namespace MH2FSB {
 
 // Forward declaration
 class Fsb;
+class FsbHeader;
 
 /*
     Defines for FSOUND_FSB_HEADER->mode field
@@ -104,9 +106,9 @@ enum FsbSoundFormat {
 
 class FsbHeader {
   std::string m_id;         /* 'FSB3' or 'FSB4', 4 bytes length */
-  int32_t m_numsamples = 0; /* number of samples in the file */
-  int32_t m_shdrsize = 0;   /* size in bytes of all the sample headers including extended information */
-  int32_t m_datasize = 0;   /* size in bytes of compressed sample data */
+  uint32_t m_numsamples = 0; /* number of samples in the file */
+  uint32_t m_shdrsize = 0;   /* size in bytes of all the sample headers including extended information */
+  uint32_t m_datasize = 0;   /* size in bytes of compressed sample data */
   uint32_t m_version = 0;   /* extended fsb version */
   uint32_t m_mode = 0;      /* flags that apply to all samples in the fsb */
   /* FSB4 additional data */
@@ -117,6 +119,8 @@ class FsbHeader {
   friend std::istream &operator>>(std::istream &in, Fsb &c);
   friend std::ostream &operator<<(std::ostream &out, FsbHeader &c);
   friend std::istream &operator>>(std::istream &in, FsbHeader &c);
+
+  friend struct YAML::convert<FsbHeader>;
 
   friend class Fsb;
 };
@@ -177,6 +181,8 @@ private:
   friend std::istream &operator>>(std::istream &in, Fsb &c);
   friend std::ostream &operator<<(std::ostream &out, FsbSampleHeader &c);
   friend std::istream &operator>>(std::istream &in, FsbSampleHeader &c);
+
+  friend struct YAML::convert<FsbSampleHeader>;
   friend class Fsb;
 };
 
@@ -185,6 +191,7 @@ private:
 /// Only FSB3 and FSB4 are implemented, since Manhunt 2 only uses these versions.
 class Fsb : public FileContainer {
 public:
+  FsbHeader GetHeader() { return m_header; };
   std::vector<FsbSampleHeader> GetSamples() { return m_samples; }
   void ResolveRealNames(const Dir &dir);
 private:
@@ -193,6 +200,7 @@ private:
 
   friend std::ostream &operator<<(std::ostream &out, Fsb &c);
   friend std::istream &operator>>(std::istream &in, Fsb &c);
+  friend struct YAML::convert<Fsb>;
 };
 
 } // namespace MH2FSB
