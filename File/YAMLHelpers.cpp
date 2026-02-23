@@ -29,7 +29,6 @@ Node convert<MH2FSB::FsbHeader>::encode(const MH2FSB::FsbHeader &rhs) {
   Node ret;
 
   ret["id"] = rhs.m_id;
-  ret["shrsize"] = rhs.m_shdrsize;
   ret["version"] = rhs.m_version;
   ret["mode"] = rhs.m_mode;
 
@@ -49,7 +48,6 @@ bool convert<MH2FSB::FsbHeader>::decode(const Node &node, MH2FSB::FsbHeader &rhs
     return false;
   }
   rhs.m_id = node["id"].as<std::string>();
-  rhs.m_shdrsize = node["shrsize"].as<uint32_t>();
   rhs.m_version = node["version"].as<uint32_t>();
   rhs.m_mode = node["mode"].as<uint32_t>();
 
