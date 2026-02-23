@@ -28,10 +28,15 @@ bool convert<MH2FSB::Fsb>::decode(const Node &node, MH2FSB::Fsb &rhs) {
 Node convert<MH2FSB::FsbHeader>::encode(const MH2FSB::FsbHeader &rhs) {
   Node ret;
 
-  ret["m_id"] = rhs.m_id;
-  ret["m_shrsize"] = rhs.m_shdrsize;
-  ret["m_version"] = rhs.m_version;
-  ret["m_mode"] = rhs.m_mode;
+  ret["id"] = rhs.m_id;
+  ret["shrsize"] = rhs.m_shdrsize;
+  ret["version"] = rhs.m_version;
+  ret["mode"] = rhs.m_mode;
+
+  if (rhs.m_version == MH2FSB::FSOUND_FSB_VERSION_4_0) {
+    ret["zeros"] = rhs.m_zeros;
+    ret["hash"] = rhs.m_hash;
+  }
 
   return ret;
 }
@@ -40,13 +45,18 @@ bool convert<MH2FSB::FsbHeader>::decode(const Node &node, MH2FSB::FsbHeader &rhs
   if (!node.IsMap())
     return false;
 
-  if (node["m_id"].as<std::string>() != "FSB3" || node["m_id"].as<std::string>() != "FSB4") {
+  if (node["id"].as<std::string>() != "FSB3" && node["id"].as<std::string>() != "FSB4") {
     return false;
   }
-  rhs.m_id = node["m_id"].as<std::string>();
-  rhs.m_shdrsize = node["m_shrsize"].as<uint32_t>();
-  rhs.m_version = node["m_version"].as<uint32_t>();
-  rhs.m_mode = node["m_mode"].as<uint32_t>();
+  rhs.m_id = node["id"].as<std::string>();
+  rhs.m_shdrsize = node["shrsize"].as<uint32_t>();
+  rhs.m_version = node["version"].as<uint32_t>();
+  rhs.m_mode = node["mode"].as<uint32_t>();
+
+  if (rhs.m_version == MH2FSB::FSOUND_FSB_VERSION_4_0) {
+    rhs.m_zeros = node["zeros"].as<std::array<uint8_t, 8>>();
+    rhs.m_hash = node["hash"].as<std::array<uint8_t, 16>>();
+  }
 
   return true;
 }
@@ -77,8 +87,24 @@ Node convert<MH2FSB::FsbSampleHeader>::encode(const MH2FSB::FsbSampleHeader &rhs
 }
 
 bool convert<MH2FSB::FsbSampleHeader>::decode(const Node &node, MH2FSB::FsbSampleHeader &rhs) {
-  // TODO: Implement
-  assert(false);
+  rhs.m_realname = node["real_name"].as<std::string>();
+
+  if (!rhs.m_is_basicheader) {
+    rhs.m_name = node["name"].as<std::string>();
+    rhs.m_loopstart = node["loopstart"].as<uint32_t>();
+    rhs.m_loopend = node["loopend"].as<uint32_t>();
+    rhs.m_mode = node["mode"].as<uint32_t>();
+    rhs.m_deffreq = node["deffreq"].as<int32_t>();
+    rhs.m_defvol = node["defvol"].as<uint16_t>();
+    rhs.m_defpan = node["defpan"].as<int16_t>();
+    rhs.m_defpri = node["defpri"].as<uint16_t>();
+    rhs.m_numchannels = node["numchannels"].as<uint16_t>();
+    rhs.m_mindistance = node["mindistance"].as<float>();
+    rhs.m_maxdistance = node["maxdistance"].as<float>();
+    rhs.m_varfreq = node["varfreq"].as<int16_t>();
+    rhs.m_varvol = node["varvol"].as<uint16_t>();
+    rhs.m_varpan = node["varpan"].as<int16_t>();
+  }
 
   return true;
 }
