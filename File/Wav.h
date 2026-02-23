@@ -32,6 +32,7 @@ class WavHeader : public FileContainer {
   uint32_t Subchunk2Size = 0; // NumSamples * NumChannels * BitsPerSample/8
 
 public:
+  WavHeader() = default;
   WavHeader(uint32_t chunk_size, uint32_t audio_format, uint32_t num_channels, uint32_t sample_rate,
             uint32_t block_align, uint16_t bits_per_sample, uint32_t subchunk2_size)
       : ChunkSize(chunk_size), AudioFormat(audio_format), NumChannels(num_channels), SampleRate(sample_rate),
@@ -42,6 +43,8 @@ public:
       ExtendedData = 64;
     }
   }
+
+  [[nodiscard]] uint32_t GetSubchunk2Size() const { return Subchunk2Size; }
 
   friend std::ostream &operator<<(std::ostream &out, WavHeader &c);
   friend std::istream &operator>>(std::istream &in, WavHeader &c);

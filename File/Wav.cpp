@@ -56,7 +56,7 @@ std::istream &operator>>(std::istream &in, WavHeader &c) {
   }
 
   UTILS::bin_read(in, c.Subchunk2ID, 4);
-  if (c.Subchunk1ID != "data") {
+  if (c.Subchunk2ID != "data") {
     throw std::runtime_error("Cannot find 'data' chunk");
   }
   UTILS::bin_read(in, c.Subchunk2Size);
