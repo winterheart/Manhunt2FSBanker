@@ -11,8 +11,8 @@ namespace YAML {
 Node convert<MH2FSB::Fsb>::encode(const MH2FSB::Fsb &rhs) {
   Node ret;
 
-  // TODO: Implement
-  assert(false);
+  ret["header"] = rhs.m_header;
+  ret["samples"] = rhs.m_samples;
 
   return ret;
 }

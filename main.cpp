@@ -70,8 +70,7 @@ void extract(const std::filesystem::path &input_path, const std::filesystem::pat
   fsb_stream.close();
 
   YAML::Node node;
-  node["fsb"]["header"] = fsb.GetHeader();
-  node["fsb"]["samples"] = fsb.GetSamples();
+  node["fsb"] = fsb;
 
   std::fstream yaml_stream(dir_path / "fileinfo.yaml", std::fstream::out);
   yaml_stream << node << std::endl;
