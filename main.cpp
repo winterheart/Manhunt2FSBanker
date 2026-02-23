@@ -78,7 +78,26 @@ void extract(const std::filesystem::path &input_path, const std::filesystem::pat
 }
 
 void pack(const std::filesystem::path &input_path, const std::filesystem::path &output_path) {
+  std::filesystem::path fsb_file = output_path / input_path.stem();
+  fsb_file.replace_extension(".fsb");
 
+  MH2FSB::Fsb fsb(input_path);
+
+  std::fstream fsb_stream(fsb_file, std::fstream::out | std::fstream::binary);
+  fsb_stream << fsb;
+
+  for (auto& sample : fsb.GetSamples()) {
+    MH2FSB::WavHeader wav_header;
+    std::fstream wav_stream(input_path / sample.GetRealName(), std::fstream::in | std::fstream::binary);
+    wav_stream >> wav_header;
+    std::vector<char> buffer;
+    auto sample_size = wav_header.GetSubchunk2Size();
+    buffer.reserve(sample_size);
+    wav_stream.read(buffer.data(), sample_size);
+    fsb_stream.write(buffer.data(), sample_size);
+    wav_stream.close();
+  }
+  fsb_stream.close();
 }
 
 int main(int argc, char *argv[]) {

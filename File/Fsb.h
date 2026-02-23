@@ -80,7 +80,7 @@ enum FsbMode {
   FSOUND_IGNORETAGS = 0x40000000, /* Skips id3v2 etc tag checks when opening a stream, to reduce seek/read overhead when
                                      opening files (helps with CD performance) */
   FSOUND_STREAM_NET = 0x80000000, /* Specifies an internet stream */
-  FSOUND_NORMAL = (FSOUND_16BITS | FSOUND_SIGNED | FSOUND_MONO)
+  FSOUND_NORMAL = FSOUND_16BITS | FSOUND_SIGNED | FSOUND_MONO
 };
 
 enum FsbSoundFormat {
@@ -112,8 +112,8 @@ class FsbHeader {
   uint32_t m_version = 0;   /* extended fsb version */
   uint32_t m_mode = 0;      /* flags that apply to all samples in the fsb */
   /* FSB4 additional data */
-  std::array<uint8_t, 8> m_zeros = {0}; /* ? */
-  std::array<uint8_t, 16> m_hash = {0}; /* hash? */
+  std::array<uint8_t, 8> m_zeros = {}; /* ? */
+  std::array<uint8_t, 16> m_hash = {}; /* hash? */
 
   friend std::ostream &operator<<(std::ostream &out, Fsb &c);
   friend std::istream &operator>>(std::istream &in, Fsb &c);
@@ -127,12 +127,16 @@ class FsbHeader {
 
 class FsbSampleHeader {
 public:
+  FsbSampleHeader() {
+    m_headerversion = FSOUND_FSB_VERSION_3_1;
+    m_is_basicheader = false;
+  }
   FsbSampleHeader(uint32_t headerversion, bool is_basicheader)
       : m_headerversion(headerversion), m_is_basicheader(is_basicheader) {}
 
   void SetRealName(const std::string &realname) { m_realname = realname; }
 
-  [[nodiscard]] std::string GetRealName() const { return m_realname; }
+  [[nodiscard]] std::filesystem::path GetRealName() const { return m_realname; }
 
   [[nodiscard]] uint32_t GetOffset() const { return m_offset; }
 
@@ -156,7 +160,8 @@ private:
   /// Offset to begin of sample
   uint32_t m_offset = 0;
 
-  uint16_t m_size = 0;
+  // Size of sample header (version 3.1)
+  uint16_t m_size = 80;
   std::string m_name;
 
   uint32_t m_lengthsamples = 0;
@@ -191,12 +196,17 @@ private:
 /// Only FSB3 and FSB4 are implemented, since Manhunt 2 only uses these versions.
 class Fsb : public FileContainer {
 public:
+  Fsb() = default;
+  explicit Fsb(const std::filesystem::path &input_path);
+
   FsbHeader GetHeader() { return m_header; };
   std::vector<FsbSampleHeader> GetSamples() { return m_samples; }
   void ResolveRealNames(const Dir &dir);
 private:
   FsbHeader m_header;
   std::vector<FsbSampleHeader> m_samples;
+
+  static uint32_t GetWavSampleRawSize(const std::filesystem::path &real_name);
 
   friend std::ostream &operator<<(std::ostream &out, Fsb &c);
   friend std::istream &operator>>(std::istream &in, Fsb &c);
