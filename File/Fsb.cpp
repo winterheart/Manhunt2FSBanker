@@ -159,7 +159,6 @@ std::istream& operator>>(std::istream& in, FsbHeader& c) {
 /* FsbSampleHeader IO */
 
 std::ostream& operator<<(std::ostream& out, FsbSampleHeader& c) {
-  // TODO: implement
   if (!c.m_is_basicheader) {
     UTILS::bin_write(out, c.m_size);
     UTILS::bin_write(out, c.m_name, 30);
@@ -219,7 +218,6 @@ std::istream& operator>>(std::istream& in, FsbSampleHeader& c) {
 /* Fsb IO */
 
 std::ostream &operator<<(std::ostream &out, Fsb &c) {
-  // TODO: implement
   out << c.m_header;
   for (auto sample_header : c.m_samples) {
     out << sample_header;
