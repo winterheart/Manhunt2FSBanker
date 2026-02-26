@@ -54,9 +54,7 @@ void extract(const std::filesystem::path &input_path, const std::filesystem::pat
     if (recode_wav && format == MH2FSB::WAVE_FORMAT_IMA_XBOX) {
       format = MH2FSB::WAVE_FORMAT_PCM;
     }
-    auto block_align = sample.GetChannels() * 36;
-
-    MH2FSB::WavHeader wav_header(sample_size + 52, format, sample.GetChannels(), sample.GetFrequency(), block_align, 4, sample_size );
+    MH2FSB::WavHeader wav_header(format, sample.GetChannels(), sample.GetFrequency(), sample_size);
 
     wav_stream << wav_header;
 
