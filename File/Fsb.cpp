@@ -79,10 +79,10 @@ Fsb::Fsb(const std::filesystem::path &input_path) {
   }
 }
 
-void Fsb::ResolveRealNames(const Dir &dir) {
+void Fsb::ResolveScriptedNames(const Dir &dir) {
   for (size_t i = 0; i < m_samples.size(); i++) {
     uint32_t crc32 = dir.GetEntriesId(i);
-    std::string name = Crc32ResolveNames::getInstance().getName(crc32);
+    std::string name = Crc32ResolveNames::getInstance().getScriptedName(crc32);
     if (name.empty()) {
       // Failed to resolve, mark it as unknown
       name = std::format(R"(scripted\unknown\unknown_{:08x}\pc_stream.wav)", crc32);
@@ -100,6 +100,32 @@ void Fsb::ResolveRealNames(const Dir &dir) {
       out /= *it;
     }
     out = out.parent_path().replace_extension(".wav");
+    result = std::format("{:04}_{}", i, out.filename().string());
+
+    m_samples.at(i).SetRealName(out.parent_path() / result);
+  }
+}
+
+void Fsb::ResolveExecutionsNames(const Dir &dir) {
+  for (size_t i = 0; i < m_samples.size(); i++) {
+    uint32_t crc32 = dir.GetEntriesId(i);
+    std::string name = Crc32ResolveNames::getInstance().getExecutionsName(crc32);
+    if (name.empty()) {
+      // Failed to resolve, mark it as unknown
+      name = std::format(R"(executions\unknown\unknown_{:08x}.wav)", crc32);
+      // std::cout << std::format("{:08x} has no resolved name, set to {}!", crc32, name) << std::endl;
+    }
+    std::ranges::replace(name, '\\', '/');
+    // Remove parent path
+    std::filesystem::path result = name;
+    auto it = result.begin();
+    if (it != result.end()) {
+      ++it;
+    }
+    std::filesystem::path out;
+    for (; it != result.end(); ++it) {
+      out /= *it;
+    }
     result = std::format("{:04}_{}", i, out.filename().string());
 
     m_samples.at(i).SetRealName(out.parent_path() / result);

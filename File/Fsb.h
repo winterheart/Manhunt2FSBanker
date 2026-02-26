@@ -201,7 +201,8 @@ public:
 
   FsbHeader GetHeader() { return m_header; };
   std::vector<FsbSampleHeader> GetSamples() { return m_samples; }
-  void ResolveRealNames(const Dir &dir);
+  void ResolveScriptedNames(const Dir &dir);
+  void ResolveExecutionsNames(const Dir &dir);
 private:
   FsbHeader m_header;
   std::vector<FsbSampleHeader> m_samples;

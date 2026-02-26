@@ -19,16 +19,25 @@ public:
     static Crc32ResolveNames instance;
     return instance;
   }
-  std::string getName(uint32_t crc32) {
-    if (m_crc32map.contains(crc32)) {
-      return m_crc32map[crc32];
+
+  std::string getScriptedName(uint32_t crc32) {
+    if (m_crc32map_scripted.contains(crc32)) {
+      return m_crc32map_scripted[crc32];
+    }
+    return "";
+  }
+
+  std::string getExecutionsName(uint32_t crc32) {
+    if (m_crc32map_executions.contains(crc32)) {
+      return m_crc32map_executions[crc32];
     }
     return "";
   }
 
 private:
   Crc32ResolveNames();
-  static std::map<uint32_t, std::string> m_crc32map;
+  static std::map<uint32_t, std::string> m_crc32map_scripted;
+  static std::map<uint32_t, std::string> m_crc32map_executions;
 };
 
 } // MH2FSB

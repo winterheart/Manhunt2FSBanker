@@ -35,7 +35,13 @@ void extract(const std::filesystem::path &input_path, const std::filesystem::pat
   MH2FSB::Dir dir;
   dir_stream >> dir;
 
-  fsb.ResolveRealNames(dir);
+  if (dir_file.stem() == "Executions") {
+    fsb.ResolveExecutionsNames(dir);
+  }
+  if (dir_file.stem() == "Scripted") {
+    fsb.ResolveScriptedNames(dir);
+  }
+
   dir_stream.close();
 
   for (const auto& sample : fsb.GetSamples()) {

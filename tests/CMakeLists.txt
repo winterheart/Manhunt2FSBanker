@@ -34,6 +34,25 @@ set_tests_properties(FSB_Compare_Scripted PROPERTIES
   FIXTURES_CLEANUP FSB_Cleanup
 )
 
+add_test(NAME FSB_Extract_Executions
+  COMMAND manhunt2fsbanker extract ${MANHUNT2_INSTALL_PATH}/audio/PC/Executions.fsb extract
+)
+
+add_test(NAME FSB_Pack_Executions
+  COMMAND manhunt2fsbanker pack extract/Executions extract/
+)
+set_tests_properties(FSB_Pack_Executions PROPERTIES
+  FIXTURES_REQUIRED FSB_Extract_Executions
+)
+
+add_test(FSB_Compare_Executions
+  ${CMAKE_COMMAND} -E compare_files ${MANHUNT2_INSTALL_PATH}/audio/PC/Executions.fsb extract/Executions.fsb
+)
+set_tests_properties(FSB_Compare_Executions PROPERTIES
+  FIXTURES_REQUIRED FSB_Pack_Executions
+  FIXTURES_CLEANUP FSB_Cleanup
+)
+
 add_test(NAME FSB_Cleanup
   COMMAND ${CMAKE_COMMAND} -E remove_directory extract
 )
