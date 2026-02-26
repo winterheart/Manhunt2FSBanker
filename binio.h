@@ -69,7 +69,7 @@ inline std::istream &bin_read(std::istream &input, std::string &value, size_t n)
  * @return pointer to updated stream position
  */
 template <class T, typename = std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>>>
-std::ostream &bin_write(std::ostream &output, T &value, size_t n) {
+std::ostream &bin_write(std::ostream &output, T value, size_t n) {
   T write_value;
   switch (sizeof(T)) {
   case 2:
@@ -97,7 +97,7 @@ std::ostream &bin_write(std::ostream &output, T &value, size_t n) {
  * @return pointer to updated stream position
  */
 template <class T, typename = std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>>>
-std::ostream &bin_write(std::ostream &output, T &value) {
+std::ostream &bin_write(std::ostream &output, T value) {
   return bin_write(output, value, sizeof(T));
 }
 
