@@ -14,3 +14,26 @@ target_link_libraries(ContextMapBin_tests PRIVATE File GTest::gtest_main)
 gtest_discover_tests(ContextMapBin_tests
   WORKING_DIRECTORY ${MANHUNT2_INSTALL_PATH}
 )
+
+add_test(NAME FSB_Extract_Scripted
+  COMMAND manhunt2fsbanker extract ${MANHUNT2_INSTALL_PATH}/audio/PC/Scripted.fsb extract
+)
+
+add_test(NAME FSB_Pack_Scripted
+  COMMAND manhunt2fsbanker pack extract/Scripted extract/
+)
+set_tests_properties(FSB_Pack_Scripted PROPERTIES
+  FIXTURES_REQUIRED FSB_Extract_Scripted
+)
+
+add_test(FSB_Compare_Scripted
+  ${CMAKE_COMMAND} -E compare_files ${MANHUNT2_INSTALL_PATH}/audio/PC/Scripted.fsb extract/Scripted.fsb
+)
+set_tests_properties(FSB_Compare_Scripted PROPERTIES
+  FIXTURES_REQUIRED FSB_Pack_Scripted
+  FIXTURES_CLEANUP FSB_Cleanup
+)
+
+add_test(NAME FSB_Cleanup
+  COMMAND ${CMAKE_COMMAND} -E remove_directory extract
+)
