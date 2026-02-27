@@ -134,7 +134,7 @@ public:
   FsbSampleHeader(uint32_t headerversion, bool is_basicheader)
       : m_headerversion(headerversion), m_is_basicheader(is_basicheader) {}
 
-  void SetRealName(const std::string &realname) { m_realname = realname; }
+  void SetRealName(const std::filesystem::path &realname) { m_realname = realname; }
 
   [[nodiscard]] std::filesystem::path GetRealName() const { return m_realname; }
 
@@ -200,7 +200,7 @@ public:
   explicit Fsb(const std::filesystem::path &input_path);
 
   FsbHeader GetHeader() { return m_header; };
-  std::vector<FsbSampleHeader> GetSamples() { return m_samples; }
+  std::vector<FsbSampleHeader> &GetSamples() { return m_samples; }
   void ResolveScriptedNames(const Dir &dir);
   void ResolveExecutionsNames(const Dir &dir);
 private:
