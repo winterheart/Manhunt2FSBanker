@@ -9,40 +9,97 @@
 
 #include "manhunt2fsbanker_version.h"
 #include "CLI11.hpp"
+#include "ContextMapBin.h"
 #include "Dir.h"
 #include "Fsb.h"
+#include "SpeechLst.h"
 #include "Wav.h"
 
 void extract(const std::filesystem::path &input_path, const std::filesystem::path &output_path, const bool &recode_wav) {
   const std::filesystem::path& fsb_file = input_path;
   const std::filesystem::path& dir_path = output_path / fsb_file.stem();
 
-  std::filesystem::path dir_file = fsb_file;
-  dir_file.replace_extension(".dir");
-
   std::fstream fsb_stream(fsb_file, std::fstream::in | std::fstream::binary);
   if (!fsb_stream.is_open()) {
     exit(-1);
   }
-  std::fstream dir_stream(dir_file, std::fstream::in | std::fstream::binary);
-  if (!dir_stream.is_open()) {
-    exit(-1);
-  }
-
   MH2FSB::Fsb fsb;
   fsb_stream >> fsb;
 
-  MH2FSB::Dir dir;
-  dir_stream >> dir;
+  std::filesystem::path dir_file = fsb_file;
+  dir_file.replace_extension(".dir");
 
-  if (dir_file.stem() == "Executions") {
-    fsb.ResolveExecutionsNames(dir);
-  }
-  if (dir_file.stem() == "Scripted") {
-    fsb.ResolveScriptedNames(dir);
-  }
+  std::filesystem::path speech_list_file = fsb_file.parent_path() / "../../../levels" / fsb_file.stem() / "speech.lst" ;
 
-  dir_stream.close();
+  // This is DIR-controlled FSB-file
+  if (std::filesystem::is_regular_file(dir_file)) {
+    std::fstream dir_stream(dir_file, std::fstream::in | std::fstream::binary);
+    if (!dir_stream.is_open()) {
+      exit(-1);
+    }
+
+    MH2FSB::Dir dir;
+    dir_stream >> dir;
+
+    if (dir_file.stem() == "Executions") {
+      fsb.ResolveExecutionsNames(dir);
+    }
+    if (dir_file.stem() == "Scripted") {
+      fsb.ResolveScriptedNames(dir);
+    }
+
+    dir_stream.close();
+  } else if (std::filesystem::is_regular_file(speech_list_file)) {
+    // This is Speech-like FSB file
+    std::fstream speech_list_stream(speech_list_file, std::fstream::in);
+    MH2FSB::SpeechLst speech_lst;
+    speech_list_stream >> speech_lst;
+
+    if (!MH2FSB::SpeechLstQuirks::Resolve(fsb_file.stem()).empty()) {
+      speech_lst.SetEntries(MH2FSB::SpeechLstQuirks::Resolve(fsb_file.filename().stem()));
+    }
+
+    std::filesystem::path contextmap_bin_parent = fsb_file.parent_path();
+
+    uint32_t count = 0;
+    for (auto &entry : fsb.GetSamples()) {
+      entry.SetRealName(std::format("UNKNOWN/{:04}.wav", count));
+      count++;
+    }
+
+    auto it = fsb.GetSamples().begin();
+
+    for (auto const &speech : speech_lst.GetEntries()) {
+      if (it == fsb.GetSamples().end()) {
+        break;
+      }
+      std::filesystem::path contextmap_file = contextmap_bin_parent / speech / "context_map.bin";
+      std::fstream contextmap_stream(contextmap_file, std::fstream::in | std::fstream::binary);
+      MH2FSB::ContextMapBin contextmap;
+      contextmap_stream >> contextmap;
+
+      uint32_t prev_entry = 0;
+      for (uint32_t i = 0; i < 58; i++) {
+        uint32_t entry = contextmap.GetEntries()[i];
+        for (uint32_t j = 0; j < (entry - prev_entry); j++) {
+          std::string filename = std::format("{:04}.wav", j);
+          std::filesystem::path real_path = std::filesystem::path(speech) / MH2FSB::ContextMapResolve::getContextMapName(i) / filename;
+          if (it == fsb.GetSamples().end()) {
+            std::cerr << "WARNING: PREMATURE END OF FSB SAMPLES!" << std::endl;
+            exit(-1);
+          } else {
+            it.operator*().SetRealName(real_path);
+            ++it;
+          }
+        }
+        prev_entry = entry;
+      }
+      contextmap_stream.close();
+    }
+  } else {
+    std::cout << "NOT IMPLEMENTED" << std::endl;
+    exit(1);
+  }
 
   for (const auto& sample : fsb.GetSamples()) {
     std::filesystem::path wav_file = dir_path / sample.GetRealName();
@@ -95,7 +152,7 @@ void pack(const std::filesystem::path &input_path, const std::filesystem::path &
     std::fstream wav_stream(input_path / sample.GetRealName(), std::fstream::in | std::fstream::binary);
     wav_stream >> wav_header;
     std::vector<char> buffer;
-    auto sample_size = wav_header.GetSubchunk2Size();
+    auto sample_size = wav_header.GetRawDataSize();
     buffer.reserve(sample_size);
     wav_stream.read(buffer.data(), sample_size);
     fsb_stream.write(buffer.data(), sample_size);
@@ -112,10 +169,6 @@ int main(int argc, char *argv[]) {
   CLI::App app{"Manhunt2FSBanker - extract/pack FSB files from Rockstar's Manhunt 2 PC game"};
   app.set_version_flag("-v", MANHUNT2FSBANKER_VERSION);
   argv = app.ensure_utf8(argv);
-  std::cout << std::format("Manhunt2FSBanker {} https://github.com/winterheart/Manhunt2FSBanker\n"
-                           "(c) 2026 Azamat H. Hackimov <azamat.hackimov@gmail.com>\n",
-                           app.version())
-            << std::endl;
 
   auto extract_cmd =
       app.add_subcommand("extract", "Extract FSB file")->callback(
