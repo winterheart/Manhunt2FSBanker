@@ -19,6 +19,7 @@ add_library(File
   File/Fsb.cpp
   File/SpeechLst.cpp
   File/Wav.cpp
+  File/WavCodec.cpp
   File/YAMLHelpers.cpp
 )
 target_include_directories(File PUBLIC

@@ -141,7 +141,7 @@ uint32_t Fsb::GetWavSampleRawSize(const std::filesystem::path &real_name) {
   wav_stream >> wav_header;
   wav_stream.close();
 
-  return wav_header.GetSubchunk2Size();
+  return wav_header.GetRawDataSize();
 }
 
 /* FsbHeader IO */

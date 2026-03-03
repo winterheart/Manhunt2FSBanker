@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
 #pragma once
 
+#include <cmath>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -67,7 +68,23 @@ public:
     UpdateState();
   }
 
-  [[nodiscard]] uint32_t GetSubchunk2Size() const { return m_raw_data_size; }
+  [[nodiscard]] uint32_t GetRawDataSize() const { return m_raw_data_size; }
+
+  void SetRawDataSize(uint32_t raw_data_size) { m_raw_data_size = raw_data_size; }
+
+  void SetAudioFormat(WavFormats audio_format) {
+    if (audio_format == WAVE_FORMAT_PCM && m_audio_format == WAVE_FORMAT_IMA_XBOX) {
+      m_raw_data_size = sizeof(int16_t) * m_frame_size * m_raw_data_size / 36;
+    }
+    if (audio_format == WAVE_FORMAT_IMA_XBOX && m_audio_format == WAVE_FORMAT_PCM) {
+      m_raw_data_size =
+          static_cast<uint32_t>(std::ceil(static_cast<float>(m_raw_data_size) /
+                                          static_cast<float>(m_num_channels * (sizeof(int16_t) * m_frame_size)))) *
+          36 * m_num_channels;
+    }
+    m_audio_format = audio_format;
+    UpdateState();
+  }
 
   friend std::ostream &operator<<(std::ostream &out, WavHeader &c);
   friend std::istream &operator>>(std::istream &in, WavHeader &c);
