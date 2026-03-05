@@ -14,6 +14,7 @@
 #include "Fsb.h"
 #include "SpeechLst.h"
 #include "Wav.h"
+#include "WavCodec.h"
 
 void extract(const std::filesystem::path &input_path, const std::filesystem::path &output_path, const bool &recode_wav) {
   const std::filesystem::path& fsb_file = input_path;
@@ -114,18 +115,24 @@ void extract(const std::filesystem::path &input_path, const std::filesystem::pat
     auto mode = sample.GetMode();
     auto sample_size = sample.GetSize();
     auto format = (mode | MH2FSB::FSOUND_IMAADPCM) ? MH2FSB::WAVE_FORMAT_IMA_XBOX : MH2FSB::WAVE_FORMAT_PCM;
-    if (recode_wav && format == MH2FSB::WAVE_FORMAT_IMA_XBOX) {
-      format = MH2FSB::WAVE_FORMAT_PCM;
-    }
     MH2FSB::WavHeader wav_header(format, sample.GetChannels(), sample.GetFrequency(), sample_size);
+
+    if (recode_wav && format == MH2FSB::WAVE_FORMAT_IMA_XBOX) {
+      // Update format to recalculate inner variables
+      wav_header.SetAudioFormat(MH2FSB::WAVE_FORMAT_PCM);
+    }
 
     wav_stream << wav_header;
 
     fsb_stream.seekg(sample.GetOffset(), std::ios::beg);
 
-    std::vector<char> buffer(sample_size);
-    fsb_stream.read(buffer.data(), sample_size);
-    wav_stream.write(buffer.data(), sample_size);
+    if (recode_wav) {
+      UTILS::WavCodec::encode(fsb_stream, wav_stream, wav_header.GetNumChannels(), sample_size);
+    } else {
+      std::vector<char> buffer(sample_size);
+      fsb_stream.read(buffer.data(), sample_size);
+      wav_stream.write(buffer.data(), sample_size);
+    }
     wav_stream.close();
   }
   fsb_stream.close();
@@ -151,11 +158,14 @@ void pack(const std::filesystem::path &input_path, const std::filesystem::path &
     MH2FSB::WavHeader wav_header;
     std::fstream wav_stream(input_path / sample.GetRealName(), std::fstream::in | std::fstream::binary);
     wav_stream >> wav_header;
-    std::vector<char> buffer;
     auto sample_size = wav_header.GetRawDataSize();
-    buffer.reserve(sample_size);
-    wav_stream.read(buffer.data(), sample_size);
-    fsb_stream.write(buffer.data(), sample_size);
+    if (wav_header.GetAudioFormat() == MH2FSB::WAVE_FORMAT_PCM) {
+      UTILS::WavCodec::decode(wav_stream, fsb_stream, wav_header.GetNumChannels(), sample_size);
+    } else {
+      std::vector<char> buffer(sample_size);
+      wav_stream.read(buffer.data(), sample_size);
+      fsb_stream.write(buffer.data(), sample_size);
+    }
     wav_stream.close();
   }
   fsb_stream.close();
@@ -166,26 +176,29 @@ int main(int argc, char *argv[]) {
   std::filesystem::path output_path;
   bool recode_wav = false;
 
-  CLI::App app{"Manhunt2FSBanker - extract/pack FSB files from Rockstar's Manhunt 2 PC game"};
+  CLI::App app{"Manhunt2FSBanker - unpack/pack FSB files from Rockstar's Manhunt 2 PC game\n"
+               "Copyright (C) 2026 Azamat H. Hackimov, licensed under LGPL-2.1 or later license"};
   app.set_version_flag("-v", MANHUNT2FSBANKER_VERSION);
   argv = app.ensure_utf8(argv);
 
-  auto extract_cmd =
-      app.add_subcommand("extract", "Extract FSB file")->callback(
+  auto unpack_cmd =
+      app.add_subcommand("unpack", "Extract FSB file")->callback(
         [&]() {
           extract(input_path, output_path, recode_wav);
         });
-  extract_cmd->add_option("input", input_path, "Input FSB file(s)")->required()->check(CLI::ExistingFile);
-  extract_cmd->add_option("output", output_path, "Output directory");
-  extract_cmd->add_flag("-r", recode_wav, "Recode samples to WAV PCM format")->default_val(recode_wav);
+  unpack_cmd->add_option("input", input_path, "Input FSB file(s)")->required()->check(CLI::ExistingFile);
+  unpack_cmd->add_option("output", output_path, "Output directory");
+  unpack_cmd->add_flag("-r", recode_wav, "Recode samples to WAV PCM format")->default_val(recode_wav);
 
   auto pack_cmd =
-      app.add_subcommand("pack", "Pack files to FSB file")->callback(
+      app.add_subcommand("pack", "Pack WAV files to FSB file")->callback(
         [&]() {
           pack(input_path, output_path);
       });
   pack_cmd->add_option("input", input_path, "Input directory")->required()->check(CLI::ExistingDirectory);
   pack_cmd->add_option("output", output_path, "Output FSB file");
+
+  app.require_subcommand(1, 1);
 
   CLI11_PARSE(app, argc, argv);
 

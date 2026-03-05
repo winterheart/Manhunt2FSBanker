@@ -11,9 +11,12 @@ manhunt2fsbanker pack extracted_directory Scripted.fsb
 
 For more help, use `manhunt2fsbanker unpack -h` and `manhunt2fsbanker pack -h`.
 
-A WAV-file should be PCM encoded 16-bit stereo 22050/44100 Hz (or mono 44100 Hz
-in case of mono stream) **without any metadata tags** in order to be encoded to
-RIB format. See "File types" section for the reference.
+A WAV-file should be pcm_s16le or adpcm_ima_xbox encoded file in order to be
+encoded to internal FSB format.
+
+For convenience, FSB-file can be extracted to pcm_s16le WAV-files (`unpack -r`
+option), which can be played by common audio player. On packing
+`manhunt2fsbanker` automatically converts them back.
 
 ## Compilation
 
