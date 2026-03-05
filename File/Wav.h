@@ -68,6 +68,10 @@ public:
     UpdateState();
   }
 
+  [[nodiscard]] uint16_t GetNumChannels() const { return m_num_channels; }
+
+  [[nodiscard]] uint16_t GetAudioFormat() const { return m_audio_format; }
+
   [[nodiscard]] uint32_t GetRawDataSize() const { return m_raw_data_size; }
 
   void SetRawDataSize(uint32_t raw_data_size) { m_raw_data_size = raw_data_size; }
