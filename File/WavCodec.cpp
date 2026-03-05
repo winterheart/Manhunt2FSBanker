@@ -10,6 +10,8 @@
 
 namespace UTILS {
 
+uint32_t WavCodec::m_num_samples = 64;
+
 std::vector<int16_t> WavCodec::m_adpcm_step_table = {
     7,     8,     9,     10,    11,    12,    13,    14,    16,    17,    // 10
     19,    21,    23,    25,    28,    31,    34,    37,    41,    45,    // 20
@@ -90,13 +92,18 @@ uint8_t WavCodec::AdpcmImaQtCompressSample(const std::shared_ptr<ADPCMChannelSta
   return nibble;
 }
 
-uint32_t WavCodec::encode(std::istream &input, std::ostream &output) {
+uint32_t WavCodec::encode(std::istream &input, std::ostream &output, uint32_t num_channels, uint32_t input_size) {
+  std::vector<std::shared_ptr<ADPCMChannelStatus>> m_channel_status(num_channels);
+  for (auto &cs : m_channel_status) {
+    cs = std::make_shared<ADPCMChannelStatus>();
+  }
   auto write_pos = output.tellp();
-  while (m_input_size > 0) {
-    for (uint32_t ch = 0; ch < m_num_channels; ch++) {
+
+  while (input_size > 0) {
+    for (uint32_t ch = 0; ch < num_channels; ch++) {
       int16_t sample;
       UTILS::bin_read<int16_t>(input, sample);
-      m_input_size -= 2;
+      input_size -= 2;
       m_channel_status[ch]->prev_sample = sample;
       UTILS::bin_write<int16_t>(output, m_channel_status[ch]->prev_sample);
       UTILS::bin_write<int8_t>(output, m_channel_status[ch]->step_index);
@@ -107,13 +114,13 @@ uint32_t WavCodec::encode(std::istream &input, std::ostream &output) {
     /* Original encoder compress 63 samples in frame, so last int32 has only 7 samples */
     while (samples_count > 0) {
       uint32_t samples_min = std::min<uint32_t>(samples_count, 8);
-      std::vector<int32_t> encoded_frames(m_num_channels, 0);
+      std::vector<int32_t> encoded_frames(num_channels, 0);
 
       for (uint32_t i = 0; i < samples_min; i++) {
-        for (uint32_t ch = 0; ch < m_num_channels; ch++) {
+        for (uint32_t ch = 0; ch < num_channels; ch++) {
           int16_t sample = 0;
-          if (m_input_size > 0) {
-            m_input_size -= 2;
+          if (input_size > 0) {
+            input_size -= 2;
             UTILS::bin_read<int16_t>(input, sample);
           }
           uint8_t v = AdpcmImaQtCompressSample(m_channel_status[ch], sample);
@@ -131,11 +138,15 @@ uint32_t WavCodec::encode(std::istream &input, std::ostream &output) {
   return output.tellp() - write_pos;
 }
 
-uint32_t WavCodec::decode(std::istream &input, std::ostream &output) {
+uint32_t WavCodec::decode(std::istream &input, std::ostream &output, uint32_t num_channels, uint32_t input_size) {
+  std::vector<std::shared_ptr<ADPCMChannelStatus>> m_channel_status(num_channels);
+  for (auto &cs : m_channel_status) {
+    cs = std::make_shared<ADPCMChannelStatus>();
+  }
   auto write_pos = output.tellp();
 
-  while (m_input_size > 0) {
-    for (uint32_t ch = 0; ch < m_num_channels; ch++) {
+  while (input_size > 0) {
+    for (uint32_t ch = 0; ch < num_channels; ch++) {
       int16_t sample;
       uint8_t step_index;
       UTILS::bin_read<int16_t>(input, sample);
@@ -144,7 +155,7 @@ uint32_t WavCodec::decode(std::istream &input, std::ostream &output) {
         throw std::runtime_error("Invalid step index");
       }
       input.seekg(1, std::ios_base::cur);
-      m_input_size -= 4;
+      input_size -= 4;
       m_channel_status[ch]->predictor = sample;
       m_channel_status[ch]->step_index = step_index;
       UTILS::bin_write<int16_t>(output, sample);
@@ -154,15 +165,15 @@ uint32_t WavCodec::decode(std::istream &input, std::ostream &output) {
     /* Original encoder compress 63 samples in frame, so last int32 has only 7 samples */
     while (samples_count > 0) {
       uint32_t samples_min = std::min(samples_count, 8u);
-      std::vector<int32_t> encoded_frames(m_num_channels, 0);
+      std::vector<int32_t> encoded_frames(num_channels, 0);
 
-      for (uint32_t ch = 0; ch < m_num_channels; ch++) {
+      for (uint32_t ch = 0; ch < num_channels; ch++) {
         UTILS::bin_read(input, encoded_frames[ch]);
-        m_input_size -= 4;
+        input_size -= 4;
       }
 
       for (int i = 0; i < samples_min; i++) {
-        for (uint32_t ch = 0; ch < m_num_channels; ch++) {
+        for (uint32_t ch = 0; ch < num_channels; ch++) {
           int16_t sample = AdpcmImaQtExpandNibble(m_channel_status[ch], encoded_frames[ch] & 0x0F);
           encoded_frames[ch] >>= 4;
           UTILS::bin_write<int16_t>(output, sample);
