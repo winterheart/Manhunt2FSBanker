@@ -20,7 +20,9 @@ Fsb::Fsb(const std::filesystem::path &input_path) {
   std::filesystem::path yaml_file = input_path / "fileinfo.yaml";
   YAML::Node node;
   try {
-    node = YAML::LoadFile(yaml_file);
+    std::fstream yaml_stream(yaml_file, std::ios::in);
+    node = YAML::Load(yaml_stream);
+    yaml_stream.close();
   } catch (std::exception &e) {
     std::cerr << std::format("Failed to load YAML-file: {}", e.what()) << std::endl;
     exit(-1);

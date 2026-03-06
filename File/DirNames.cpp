@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: Copyright 2026 Azamat H. Hackimov <azamat.hackimov@gmail.com> */
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
 
-#include "DirNames.h"
-
-#include "CRC32.h"
-
+#include <algorithm>
 #include <cstdint>
 #include <format>
 #include <string>
 #include <vector>
+
+#include "CRC32.h"
+#include "DirNames.h"
 
 namespace MH2FSB {
 

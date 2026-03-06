@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(Manhunt2FSBanker VERSION 0.5.0 LANGUAGES CXX)
+project(Manhunt2FSBanker VERSION 0.5.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -7,7 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(MANHUNT2_INSTALL_PATH "Manhunt 2 installation path (required for testing)")
 
-find_package(yaml-cpp REQUIRED)
+find_package(yaml-cpp CONFIG REQUIRED)
 
 configure_file(manhunt2fsbanker_version.h.in manhunt2fsbanker_version.h)
 
@@ -36,10 +36,6 @@ add_executable(manhunt2fsbanker
 target_include_directories(manhunt2fsbanker PUBLIC "${PROJECT_BINARY_DIR}")
 target_link_libraries(manhunt2fsbanker PRIVATE
   File
-)
-target_link_options(manhunt2fsbanker PRIVATE
-  $<$<PLATFORM_ID:Windows>:-static>
-  $<$<PLATFORM_ID:Windows>:-s>
 )
 
 if(BUILD_TESTING)

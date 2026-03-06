@@ -1,13 +1,14 @@
 /* SPDX-FileCopyrightText: Copyright 2026 Azamat H. Hackimov <azamat.hackimov@gmail.com> */
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
 
+#include <filesystem>
 #include <fstream>
 
 #include "SpeechLst.h"
 
 namespace MH2FSB {
 
-std::map<std::string, std::vector<std::string>> SpeechLstQuirks::m_quirks = //
+std::map<std::filesystem::path, std::vector<std::filesystem::path>> SpeechLstQuirks::m_quirks = //
     {
         {
             "A01_Escape_Asylum", // Add INMATE_1_1
@@ -74,7 +75,7 @@ std::map<std::string, std::vector<std::string>> SpeechLstQuirks::m_quirks = //
              "WATCHDOG_4_1",
          }}};
 
-std::vector<std::string> SpeechLstQuirks::Resolve(const std::string& level_name) {
+std::vector<std::filesystem::path> SpeechLstQuirks::Resolve(const std::filesystem::path &level_name) {
   if (m_quirks.contains(level_name)) {
     return m_quirks[level_name];
   }
