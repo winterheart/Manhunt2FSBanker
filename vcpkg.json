@@ -1,0 +1,10 @@
+{
+  "name": "manhunt2fsbanker",
+  "version": "0.5.0",
+  "builtin-baseline": "74e6536215718009aae747d86d84b78376bf9e09",
+  "dependencies": [
+    {
+      "name": "yaml-cpp"
+    }
+  ]
+}
