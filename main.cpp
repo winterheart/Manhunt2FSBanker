@@ -22,6 +22,7 @@ void extract(const std::filesystem::path &input_path, const std::filesystem::pat
 
   std::fstream fsb_stream(fsb_file, std::fstream::in | std::fstream::binary);
   if (!fsb_stream.is_open()) {
+    std::cerr << "Cannot open .fsb file " << fsb_file << std::endl;
     exit(-1);
   }
   MH2FSB::Fsb fsb;
@@ -36,6 +37,7 @@ void extract(const std::filesystem::path &input_path, const std::filesystem::pat
   if (std::filesystem::is_regular_file(dir_file)) {
     std::fstream dir_stream(dir_file, std::fstream::in | std::fstream::binary);
     if (!dir_stream.is_open()) {
+      std::cerr << "Cannot open .dir file " << dir_file << std::endl;
       exit(-1);
     }
 
@@ -53,6 +55,10 @@ void extract(const std::filesystem::path &input_path, const std::filesystem::pat
   } else if (std::filesystem::is_regular_file(speech_list_file)) {
     // This is Speech-like FSB file
     std::fstream speech_list_stream(speech_list_file, std::fstream::in);
+    if (!speech_list_stream.is_open()) {
+      std::cerr << "Cannot open speech.lst file " << speech_list_file << std::endl;
+      exit(-1);
+    }
     MH2FSB::SpeechLst speech_lst;
     speech_list_stream >> speech_lst;
 
@@ -76,6 +82,10 @@ void extract(const std::filesystem::path &input_path, const std::filesystem::pat
       }
       std::filesystem::path contextmap_file = contextmap_bin_parent / speech / "context_map.bin";
       std::fstream contextmap_stream(contextmap_file, std::fstream::in | std::fstream::binary);
+      if (!contextmap_stream.is_open()) {
+        std::cerr << "Cannot open context_map.bin file " << contextmap_file << std::endl;
+        exit(-1);
+      }
       MH2FSB::ContextMapBin contextmap;
       contextmap_stream >> contextmap;
 
@@ -107,11 +117,15 @@ void extract(const std::filesystem::path &input_path, const std::filesystem::pat
     std::error_code ec;
     std::filesystem::create_directories(wav_file.parent_path(), ec);
     if (ec) {
-      std::cerr << ec.message() << std::endl;
+      std::cerr << "Cannot create directory: " << ec.message() << std::endl;
       exit(-1);
     }
 
     std::fstream wav_stream(wav_file, std::fstream::out | std::fstream::binary);
+    if (!wav_stream.is_open()) {
+      std::cerr << "Cannot open .wav file " << wav_file << std::endl;
+      exit(-1);
+    }
     auto mode = sample.GetMode();
     auto sample_size = sample.GetSize();
     auto format = (mode | MH2FSB::FSOUND_IMAADPCM) ? MH2FSB::WAVE_FORMAT_IMA_XBOX : MH2FSB::WAVE_FORMAT_PCM;
@@ -141,6 +155,11 @@ void extract(const std::filesystem::path &input_path, const std::filesystem::pat
   node["fsb"] = fsb;
 
   std::fstream yaml_stream(dir_path / "fileinfo.yaml", std::fstream::out);
+  if (!yaml_stream.is_open()) {
+    std::cerr << "Cannot open fileinfo.yaml file " << dir_path / "fileinfo.yaml" << std::endl;
+    exit(-1);
+  }
+
   yaml_stream << node << std::endl;
   yaml_stream.close();
 }
@@ -149,14 +168,35 @@ void pack(const std::filesystem::path &input_path, const std::filesystem::path &
   std::filesystem::path fsb_file = output_path / input_path.stem();
   fsb_file.replace_extension(".fsb");
 
-  MH2FSB::Fsb fsb(input_path);
+  std::error_code ec;
+  std::filesystem::create_directories(fsb_file.parent_path(), ec);
+  if (ec) {
+    std::cerr << "Cannot create directory: " << ec.message() << std::endl;
+    exit(-1);
+  }
+
+  MH2FSB::Fsb fsb;
+  try {
+    fsb = MH2FSB::Fsb(input_path);
+  } catch (const std::exception& e) {
+    std::cerr << "Failed open input directory " << input_path << ": " << e.what() << std::endl;
+    exit(-1);
+  }
 
   std::fstream fsb_stream(fsb_file, std::fstream::out | std::fstream::binary);
+  if (!fsb_stream.is_open()) {
+    std::cerr << "Cannot open .fsb file " << fsb_file << std::endl;
+    exit(-1);
+  }
   fsb_stream << fsb;
 
   for (auto& sample : fsb.GetSamples()) {
     MH2FSB::WavHeader wav_header;
     std::fstream wav_stream(input_path / sample.GetRealName(), std::fstream::in | std::fstream::binary);
+    if (!wav_stream.is_open()) {
+      std::cerr << "Cannot open .wav file " << input_path / sample.GetRealName() << std::endl;
+      exit(-1);
+    }
     wav_stream >> wav_header;
     auto sample_size = wav_header.GetRawDataSize();
     if (wav_header.GetAudioFormat() == MH2FSB::WAVE_FORMAT_PCM) {
@@ -196,7 +236,7 @@ int main(int argc, char *argv[]) {
           pack(input_path, output_path);
       });
   pack_cmd->add_option("input", input_path, "Input directory")->required()->check(CLI::ExistingDirectory);
-  pack_cmd->add_option("output", output_path, "Output FSB file");
+  pack_cmd->add_option("output", output_path, "Output directory");
 
   app.require_subcommand(1, 1);
 

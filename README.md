@@ -5,8 +5,8 @@
 ```shell
 # Unpacking
 manhunt2fsbanker unpack Scripted.fsb extracted_directory
-# Packing
-manhunt2fsbanker pack extracted_directory Scripted.fsb
+# Packing (generated Scripted.fsb file will be placed to output directory)
+manhunt2fsbanker pack extracted_directory output
 ```
 
 For more help, use `manhunt2fsbanker unpack -h` and `manhunt2fsbanker pack -h`.
