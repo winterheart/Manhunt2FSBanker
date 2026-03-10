@@ -84,7 +84,7 @@ std::vector<std::filesystem::path> SpeechLstQuirks::Resolve(const std::filesyste
 
 std::ostream &operator<<(std::ostream &out, const SpeechLst &c) {
   for (auto const &entry : c.m_entries) {
-    out << entry << "\r\n";
+    out << entry.string() << "\r\n";
   }
   return out;
 }
