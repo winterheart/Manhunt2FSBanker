@@ -92,7 +92,7 @@ uint8_t WavCodec::AdpcmImaQtCompressSample(const std::shared_ptr<ADPCMChannelSta
   return nibble;
 }
 
-uint32_t WavCodec::encode(std::istream &input, std::ostream &output, uint32_t num_channels, uint32_t input_size) {
+uint32_t WavCodec::encode(std::istream &input, std::ostream &output, uint32_t num_channels, int32_t input_size) {
   std::vector<std::shared_ptr<ADPCMChannelStatus>> m_channel_status(num_channels);
   for (auto &cs : m_channel_status) {
     cs = std::make_shared<ADPCMChannelStatus>();
@@ -138,7 +138,7 @@ uint32_t WavCodec::encode(std::istream &input, std::ostream &output, uint32_t nu
   return output.tellp() - write_pos;
 }
 
-uint32_t WavCodec::decode(std::istream &input, std::ostream &output, uint32_t num_channels, uint32_t input_size) {
+uint32_t WavCodec::decode(std::istream &input, std::ostream &output, uint32_t num_channels, int32_t input_size) {
   std::vector<std::shared_ptr<ADPCMChannelStatus>> m_channel_status(num_channels);
   for (auto &cs : m_channel_status) {
     cs = std::make_shared<ADPCMChannelStatus>();

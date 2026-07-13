@@ -141,7 +141,7 @@ void extract(const std::filesystem::path &input_path, const std::filesystem::pat
     fsb_stream.seekg(sample.GetOffset(), std::ios::beg);
 
     if (recode_wav) {
-      UTILS::WavCodec::encode(fsb_stream, wav_stream, wav_header.GetNumChannels(), sample_size);
+      UTILS::WavCodec::decode(fsb_stream, wav_stream, wav_header.GetNumChannels(), static_cast<int32_t>(sample_size));
     } else {
       std::vector<char> buffer(sample_size);
       fsb_stream.read(buffer.data(), sample_size);
@@ -200,7 +200,7 @@ void pack(const std::filesystem::path &input_path, const std::filesystem::path &
     wav_stream >> wav_header;
     auto sample_size = wav_header.GetRawDataSize();
     if (wav_header.GetAudioFormat() == MH2FSB::WAVE_FORMAT_PCM) {
-      UTILS::WavCodec::decode(wav_stream, fsb_stream, wav_header.GetNumChannels(), sample_size);
+      UTILS::WavCodec::encode(wav_stream, fsb_stream, wav_header.GetNumChannels(), static_cast<int32_t>(sample_size));
     } else {
       std::vector<char> buffer(sample_size);
       wav_stream.read(buffer.data(), sample_size);

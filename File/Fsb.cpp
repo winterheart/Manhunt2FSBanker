@@ -39,7 +39,6 @@ Fsb::Fsb(const std::filesystem::path &input_path) {
   }
 
   auto header_size = m_header.m_shdrsize + m_header.m_version == FSOUND_FSB_VERSION_3_1 ? 24 : 48;
-  WavHeader wav_header;
 
   if (m_header.m_mode & FSOUND_FSB_SOURCE_BASICHEADERS) {
     auto it = node["fsb"]["samples"].begin();
@@ -142,6 +141,10 @@ uint32_t Fsb::GetWavSampleRawSize(const std::filesystem::path &real_name) {
   }
   wav_stream >> wav_header;
   wav_stream.close();
+  // Recalculate sizes on recoding
+  if (wav_header.GetAudioFormat() == WAVE_FORMAT_PCM) {
+    wav_header.SetAudioFormat(WAVE_FORMAT_IMA_XBOX);
+  }
 
   return wav_header.GetRawDataSize();
 }

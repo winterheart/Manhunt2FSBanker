@@ -16,9 +16,25 @@ typedef struct ADPCMChannelStatus {
 
 class WavCodec {
 public:
-  static uint32_t encode(std::istream &input, std::ostream &output, uint32_t num_channels, uint32_t input_size);
+  /**
+   * Encode PCM stream to XBOX ADPCM
+   * @param input input stream
+   * @param output output stream
+   * @param num_channels number of channels
+   * @param input_size size of input stream
+   * @return size of encoded data
+   */
+  static uint32_t encode(std::istream &input, std::ostream &output, uint32_t num_channels, int32_t input_size);
 
-  static uint32_t decode(std::istream &input, std::ostream &output, uint32_t num_channels, uint32_t input_size);
+  /**
+   * Decode XBOX ADPCM stream into PCM
+   * @param input input stream
+   * @param output output stream
+   * @param num_channels number of channels
+   * @param input_size size of input stream
+   * @return size of decoded data
+   */
+  static uint32_t decode(std::istream &input, std::ostream &output, uint32_t num_channels, int32_t input_size);
 
 private:
   static int32_t AdpcmImaQtExpandNibble(const std::shared_ptr<ADPCMChannelStatus> &cs, int32_t nibble);
