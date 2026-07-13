@@ -16,7 +16,7 @@
 #include "Wav.h"
 #include "WavCodec.h"
 
-void extract(const std::filesystem::path &input_path, const std::filesystem::path &output_path, const bool &recode_wav) {
+void extract(const std::filesystem::path &input_path, const std::filesystem::path &output_path, const bool &recode_wav, bool verbose) {
   const std::filesystem::path& fsb_file = input_path;
   const std::filesystem::path& dir_path = output_path / fsb_file.stem();
 
@@ -120,7 +120,9 @@ void extract(const std::filesystem::path &input_path, const std::filesystem::pat
       std::cerr << "Cannot create directory: " << ec.message() << std::endl;
       exit(-1);
     }
-
+    if (verbose) {
+      std::cout << "Extracting " << wav_file << "... ";
+    }
     std::fstream wav_stream(wav_file, std::fstream::out | std::fstream::binary);
     if (!wav_stream.is_open()) {
       std::cerr << "Cannot open .wav file " << wav_file << std::endl;
@@ -140,12 +142,22 @@ void extract(const std::filesystem::path &input_path, const std::filesystem::pat
 
     fsb_stream.seekg(sample.GetOffset(), std::ios::beg);
 
+    uint32_t size = sample_size;
     if (recode_wav) {
-      UTILS::WavCodec::decode(fsb_stream, wav_stream, wav_header.GetNumChannels(), static_cast<int32_t>(sample_size));
+      if (verbose) {
+        std::cout << "(decode)... ";
+      }
+      size = UTILS::WavCodec::decode(fsb_stream, wav_stream, wav_header.GetNumChannels(), static_cast<int32_t>(sample_size));
     } else {
+      if (verbose) {
+        std::cout << "(copy)... ";
+      }
       std::vector<char> buffer(sample_size);
       fsb_stream.read(buffer.data(), sample_size);
       wav_stream.write(buffer.data(), sample_size);
+    }
+    if (verbose) {
+      std::cout << "done (" << size << " bytes)." << std::endl;
     }
     wav_stream.close();
   }
@@ -164,7 +176,7 @@ void extract(const std::filesystem::path &input_path, const std::filesystem::pat
   yaml_stream.close();
 }
 
-void pack(const std::filesystem::path &input_path, const std::filesystem::path &output_path) {
+void pack(const std::filesystem::path &input_path, const std::filesystem::path &output_path, bool verbose) {
   std::filesystem::path fsb_file = output_path / input_path.stem();
   fsb_file.replace_extension(".fsb");
 
@@ -192,20 +204,44 @@ void pack(const std::filesystem::path &input_path, const std::filesystem::path &
 
   for (auto& sample : fsb.GetSamples()) {
     MH2FSB::WavHeader wav_header;
-    std::fstream wav_stream(input_path / sample.GetRealName(), std::fstream::in | std::fstream::binary);
+    std::filesystem::path wav_file = input_path / sample.GetRealName();
+    std::fstream wav_stream(wav_file, std::fstream::in | std::fstream::binary);
     if (!wav_stream.is_open()) {
-      std::cerr << "Cannot open .wav file " << input_path / sample.GetRealName() << std::endl;
+      std::cerr << "Cannot open .wav file " << wav_file << std::endl;
       exit(-1);
+    }
+    if (verbose) {
+      std::cout << "Packing " << wav_file << "... ";
     }
     wav_stream >> wav_header;
     auto sample_size = wav_header.GetRawDataSize();
-    if (wav_header.GetAudioFormat() == MH2FSB::WAVE_FORMAT_PCM) {
-      UTILS::WavCodec::encode(wav_stream, fsb_stream, wav_header.GetNumChannels(), static_cast<int32_t>(sample_size));
-    } else {
-      std::vector<char> buffer(sample_size);
+    uint32_t size = sample_size;
+    uint16_t format = wav_header.GetAudioFormat();
+    std::vector<char> buffer(sample_size);
+    switch (format) {
+    case MH2FSB::WAVE_FORMAT_PCM:
+      if (verbose) {
+        std::cout << "(encode)... ";
+      }
+      size = UTILS::WavCodec::encode(wav_stream, fsb_stream, wav_header.GetNumChannels(), static_cast<int32_t>(sample_size));
+      break;
+
+    case MH2FSB::WAVE_FORMAT_IMA_XBOX:
+      if (verbose) {
+        std::cout << "(copy)... ";
+      }
       wav_stream.read(buffer.data(), sample_size);
       fsb_stream.write(buffer.data(), sample_size);
+      break;
+
+    default:
+      std::cerr << "Unsupported wave format: " << format << std::endl;
+      exit(-1);
     }
+    if (verbose) {
+      std::cout << "done (" << size << " bytes)." << std::endl;
+    }
+
     wav_stream.close();
   }
   fsb_stream.close();
@@ -215,6 +251,7 @@ int main(int argc, char *argv[]) {
   std::filesystem::path input_path;
   std::filesystem::path output_path;
   bool recode_wav = false;
+  bool verbose = false;
 
   CLI::App app{"Manhunt2FSBanker - unpack/pack FSB files from Rockstar's Manhunt 2 PC game\n"
                "Copyright (C) 2026 Azamat H. Hackimov, licensed under LGPL-2.1 or later license"};
@@ -224,19 +261,21 @@ int main(int argc, char *argv[]) {
   auto unpack_cmd =
       app.add_subcommand("unpack", "Extract FSB file")->callback(
         [&]() {
-          extract(input_path, output_path, recode_wav);
+          extract(input_path, output_path, recode_wav, verbose);
         });
   unpack_cmd->add_option("input", input_path, "Input FSB file(s)")->required()->check(CLI::ExistingFile);
   unpack_cmd->add_option("output", output_path, "Output directory");
   unpack_cmd->add_flag("-r", recode_wav, "Recode samples to WAV PCM format")->default_val(recode_wav);
+  unpack_cmd->add_flag("-V", verbose, "Verbose output")->default_val(verbose);
 
   auto pack_cmd =
       app.add_subcommand("pack", "Pack WAV files to FSB file")->callback(
         [&]() {
-          pack(input_path, output_path);
+          pack(input_path, output_path, verbose);
       });
   pack_cmd->add_option("input", input_path, "Input directory")->required()->check(CLI::ExistingDirectory);
   pack_cmd->add_option("output", output_path, "Output directory");
+  pack_cmd->add_flag("-V", verbose, "Verbose output")->default_val(verbose);
 
   app.require_subcommand(1, 1);
 
