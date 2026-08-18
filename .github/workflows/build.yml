@@ -2,6 +2,8 @@ name: build
 
 on:
   push:
+    tags:
+      - '\d+\.\d+\.\d+'
     branches:
       - master
   pull_request:
@@ -33,6 +35,10 @@ jobs:
         if: ${{ matrix.config.os == 'windows-latest' }}
         with:
           arch: win64
+
+      - uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgJsonGlob: vcpkg.json
 
       - name: "Build with ${{ matrix.config.cxx }}"
         env:
