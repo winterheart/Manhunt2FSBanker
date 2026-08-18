@@ -30,14 +30,12 @@ jobs:
 
       - name: Build and package
         run: |
-          set -x
           cmake --preset ninja 
           cmake --build --preset ninja
           cpack --preset ninja
 
       - name: Create release and upload assets
         run: |
-          set -x
           tag_name="${GITHUB_REF##*/}"
           gh release create "$tag_name" "./builds/ninja/Manhunt2FSBanker-*.7z"
         env:
