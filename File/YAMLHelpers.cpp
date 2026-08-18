@@ -62,7 +62,7 @@ bool convert<MH2FSB::FsbHeader>::decode(const Node &node, MH2FSB::FsbHeader &rhs
 Node convert<MH2FSB::FsbSampleHeader>::encode(const MH2FSB::FsbSampleHeader &rhs) {
   Node ret;
 
-  ret["real_name"] = rhs.m_realname.string();
+  ret["real_name"] = rhs.m_realname.generic_string();
 
   if (!rhs.m_is_basicheader) {
     ret["name"] = rhs.m_name;
