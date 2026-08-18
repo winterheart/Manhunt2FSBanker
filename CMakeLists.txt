@@ -37,7 +37,8 @@ target_include_directories(manhunt2fsbanker PUBLIC "${PROJECT_BINARY_DIR}")
 target_link_libraries(manhunt2fsbanker PRIVATE
   File
 )
-
+install(TARGETS manhunt2fsbanker RUNTIME DESTINATION .)
+install(FILES README.md DESTINATION .)
 if(BUILD_TESTING)
   if(NOT IS_DIRECTORY ${MANHUNT2_INSTALL_PATH})
     message(FATAL_ERROR "MANHUNT2_INSTALL_PATH does not exists!")
@@ -48,3 +49,8 @@ if(BUILD_TESTING)
   include(GoogleTest)
   add_subdirectory(tests)
 endif()
+
+# CPack configuration
+set(CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}-${PROJECT_VERSION}")
+include(CPack)
+
