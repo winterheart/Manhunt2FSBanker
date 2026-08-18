@@ -63,6 +63,7 @@ std::istream &operator>>(std::istream &in, WavHeader &c) {
       switch (c.m_audio_format) {
         case WAVE_FORMAT_PCM:
         case WAVE_FORMAT_IMA_XBOX:
+        case WAVE_FORMAT_EXTENSIBLE:
           break;
         default:
           throw std::runtime_error("Unknown WAVE format");
@@ -75,21 +76,30 @@ std::istream &operator>>(std::istream &in, WavHeader &c) {
       riff_size -= 16;
       chunk_size -= 16;
       if (chunk_size > 0) {
-        uint16_t extended_size;
-        UTILS::bin_read(in, extended_size);
+        UTILS::bin_read(in, c.m_extended_data);
         riff_size -= 2;
         chunk_size -= 2;
-        if (extended_size > 0) {
-          if (c.m_audio_format == WAVE_FORMAT_IMA_XBOX) {
-            UTILS::bin_read(in, c.m_frame_size);
-            riff_size -= 2;
-            chunk_size -= 2;
-          } else {
-            // Just skip extended data
-            in.seekg(extended_size, std::ios::cur);
-            riff_size -= extended_size;
-            chunk_size -= extended_size;
+        if (c.m_extended_data > 0) {
+          switch (c.m_audio_format) {
+            case WAVE_FORMAT_IMA_XBOX: {
+              UTILS::bin_read(in, c.m_frame_size);
+              break;
+            }
+            case WAVE_FORMAT_EXTENSIBLE: {
+              WavFormatExtensible extensible_format;
+              in >> extensible_format;
+              if (extensible_format.m_guid != WavFormatExtensible::KSDATAFORMAT_SUBTYPE_PCM) {
+                throw std::runtime_error("Unknown extended WAVE type");
+              }
+              break;
+            }
+            default: {
+              // Just skip extended data
+              in.seekg(c.m_extended_data, std::ios::cur);
+            }
           }
+          riff_size -= c.m_extended_data;
+          chunk_size -= c.m_extended_data;
         }
       }
       break;
@@ -116,6 +126,29 @@ std::istream &operator>>(std::istream &in, WavHeader &c) {
   }
   // Seek to sample data position for convenient
   in.seekg(data_position, std::ios::beg);
+
+  return in;
+}
+
+std::ostream &operator<<(std::ostream &out, WavFormatExtensible &c) {
+  UTILS::bin_write(out, c.m_samples);
+  UTILS::bin_write(out, c.m_channel_mask);
+  out << c.m_guid;
+
+  return out;
+}
+
+std::istream &operator>>(std::istream &in, WavFormatExtensible &c) {
+  UTILS::bin_read(in, c.m_samples);
+  UTILS::bin_read(in, c.m_channel_mask);
+
+  uint8_t uuid_parts[16];
+  int count = 0;
+  while (count < 16) {
+    in >> uuid_parts[count];
+    count++;
+  }
+  c.m_guid = uuids::uuid(std::begin(uuid_parts), std::end(uuid_parts));
 
   return in;
 }

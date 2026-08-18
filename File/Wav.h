@@ -8,12 +8,14 @@
 #include <vector>
 
 #include "FileContainer.h"
+#include "uuid.h"
 
 namespace MH2FSB {
 
 enum WavFormats {
   WAVE_FORMAT_PCM = 0x0001,
   WAVE_FORMAT_IMA_XBOX = 0x0069,
+  WAVE_FORMAT_EXTENSIBLE = 0xFFFE,
 };
 
 // List only subchunks that we care of
@@ -32,6 +34,7 @@ class WavHeader : public FileContainer {
   uint16_t m_block_align = 2 * m_num_channels;
   uint32_t m_bytes_rate = m_block_align * m_sample_rate;
   uint16_t m_bits_per_sample = 16;
+  uint16_t m_extended_data = 0;
 
   // Used for ADPCM IMA XBOX
   uint16_t m_frame_size = 64;
@@ -92,6 +95,24 @@ public:
 
   friend std::ostream &operator<<(std::ostream &out, WavHeader &c);
   friend std::istream &operator>>(std::istream &in, WavHeader &c);
+};
+
+class WavFormatExtensible : public FileContainer {
+public:
+  static inline uuids::uuid KSDATAFORMAT_SUBTYPE_PCM = {{
+    0x01, 0x00, 0x00, 0x00,
+    0x00, 0x00,
+    0x10, 0x00,
+    0x80, 0x00,
+    0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71
+  }};
+
+  uint16_t m_samples = 0;
+  uint32_t m_channel_mask = 0;
+  uuids::uuid m_guid;
+
+  friend std::ostream &operator<<(std::ostream &out, WavFormatExtensible &c);
+  friend std::istream &operator>>(std::istream &in, WavFormatExtensible &c);
 };
 
 } // namespace MH2FSB

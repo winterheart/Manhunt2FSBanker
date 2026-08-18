@@ -220,6 +220,7 @@ void pack(const std::filesystem::path &input_path, const std::filesystem::path &
     std::vector<char> buffer(sample_size);
     switch (format) {
     case MH2FSB::WAVE_FORMAT_PCM:
+    case MH2FSB::WAVE_FORMAT_EXTENSIBLE:
       if (verbose) {
         std::cout << "(encode)... ";
       }
