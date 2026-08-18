@@ -55,5 +55,11 @@ Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 Project uses CLI11 library under a 3-Clause BSD license. See CLI11.hpp for
 additional info.
+https://github.com/cliutils/cli11
+
+----
+
+Project uses stduuid library under MIT license.
+https://github.com/mariusbancila/stduuid
 
 ----
