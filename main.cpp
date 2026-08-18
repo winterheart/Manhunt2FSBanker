@@ -17,6 +17,9 @@
 #include "WavCodec.h"
 
 void extract(const std::filesystem::path &input_path, const std::filesystem::path &output_path, const bool &recode_wav, bool verbose) {
+  if (verbose) {
+    std::cout << "Running Manhunt2FSBanker v" << MANHUNT2FSBANKER_VERSION << " in unpacking mode" << std::endl;
+  }
   const std::filesystem::path& fsb_file = input_path;
   const std::filesystem::path& dir_path = output_path / fsb_file.stem();
 
@@ -177,6 +180,9 @@ void extract(const std::filesystem::path &input_path, const std::filesystem::pat
 }
 
 void pack(const std::filesystem::path &input_path, const std::filesystem::path &output_path, bool verbose) {
+  if (verbose) {
+    std::cout << "Running Manhunt2FSBanker v" << MANHUNT2FSBANKER_VERSION << " in packing mode" << std::endl;
+  }
   std::filesystem::path fsb_file = output_path / input_path.stem();
   fsb_file.replace_extension(".fsb");
 
