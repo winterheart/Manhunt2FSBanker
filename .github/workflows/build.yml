@@ -33,7 +33,7 @@ jobs:
       - uses: lukka/get-cmake@latest
 
       - name: "Prepare Windows environment"
-        uses: ilammy/msvc-dev-cmd@v1
+        uses: ilammy/msvc-dev-cmd@v1.13.0
         if: ${{ matrix.config.os == 'windows-latest' }}
         with:
           arch: win64
