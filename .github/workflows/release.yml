@@ -35,8 +35,9 @@ jobs:
           cpack --preset ninja
 
       - name: Create release and upload assets
+        shell: pwsh
         run: |
-          tag_name="${GITHUB_REF##*/}"
+          $tag_name = "${{ github.ref_name }}"
           gh release create "$tag_name" "./builds/ninja/Manhunt2FSBanker-*.7z"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
