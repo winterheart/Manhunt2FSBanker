@@ -13,7 +13,7 @@ on:
 jobs:
   build-all:
     runs-on: ${{ matrix.config.os }}
-    name: 'Build on ${{ matrix.config.os }} (${{ matrix.config.cxx }}, ${{ matrix.type }}'
+    name: 'Build on ${{ matrix.config.os }} (${{ matrix.config.cxx }})'
     strategy:
       fail-fast: false
       matrix:
@@ -21,14 +21,13 @@ jobs:
           - { os: "ubuntu-latest", cxx: "g++" }
           - { os: "ubuntu-latest", cxx: "clang++" }
           - { os: "windows-latest", cxx: "cl" }
-        type:
-          - "Debug"
-          - "Release"
     steps:
       - name: "Checkout"
         uses: actions/checkout@v7
         with:
           submodules: 'true'
+
+      - uses: lukka/get-cmake@latest
 
       - name: "Prepare Windows environment"
         uses: ilammy/msvc-dev-cmd@v1
@@ -40,9 +39,8 @@ jobs:
         with:
           vcpkgJsonGlob: vcpkg.json
 
-      - name: "Build with ${{ matrix.config.cxx }}"
-        env:
-          CXX: ${{ matrix.config.cxx }}
-        run: |
-          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.type }}
-          cmake --build build -j2
+      - name: Run CMake with vcpkg.json manifest
+        uses: lukka/run-cmake@v10
+        with:
+          configurePreset: ninja-multi-vcpkg
+          buildPreset: ninja-multi-vcpkg
