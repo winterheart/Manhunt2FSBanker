@@ -13,7 +13,11 @@
       "binaryDir": "${sourceDir}/builds/${presetName}",
       "generator": "Ninja",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_TOOLCHAIN_FILE": {
+          "type": "FILEPATH",
+          "value": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        }
       }
     },
     {
@@ -120,7 +124,7 @@
       "configurePreset": "ninja",
       "variables": {
         "CPACK_ARCHIVE_FILE_EXTENSION": "7z",
-        "CPACK_OUTPUT_FILE_PREFIX": "${sourceDir}/builds/ninja"
+        "CPACK_OUTPUT_FILE_PREFIX": "${sourceDir}/builds/${presetName}"
       },
       "generators": [
         "7Z"
