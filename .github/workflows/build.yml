@@ -1,0 +1,42 @@
+name: build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build-all:
+    runs-on: ${{ matrix.config.os }}
+    name: 'Build on ${{ matrix.config.os }} (${{ matrix.config.cxx }}, ${{ matrix.type }}'
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { os: "ubuntu-latest", cxx: "g++" }
+          - { os: "ubuntu-latest", cxx: "clang++" }
+          - { os: "windows-latest", cxx: "cl" }
+        type:
+          - "Debug"
+          - "Release"
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v7
+        with:
+          submodules: 'true'
+
+      - name: "Prepare Windows environment"
+        uses: ilammy/msvc-dev-cmd@v1
+        if: ${{ matrix.config.os == 'windows-latest' }}
+        with:
+          arch: win64
+
+      - name: "Build with ${{ matrix.config.cxx }}"
+        env:
+          CXX: ${{ matrix.config.cxx }}
+        run: |
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.type }}
+          cmake --build build -j2
