@@ -45,11 +45,12 @@ std::istream &operator>>(std::istream &in, WavHeader &c) {
   UTILS::bin_read(in, magic, 4);
   riff_size -= 4;
   if (magic != "WAVE") {
-    throw std::runtime_error("File is not a WAVe file");
+    throw std::runtime_error("File is not a WAV file");
   }
   uint32_t chunk_size;
   uint32_t data_position = 0;
-  while (riff_size > 0) {
+  uint32_t failsafe = 1000;
+  while (riff_size > 0 && failsafe > 0) {
     UTILS::bin_read(in, chunk_id);
     riff_size -= 4;
     switch (chunk_id) {
@@ -59,6 +60,13 @@ std::istream &operator>>(std::istream &in, WavHeader &c) {
       chunk_size = c.m_fmt_chunk_size;
 
       UTILS::bin_read(in, c.m_audio_format);
+      switch (c.m_audio_format) {
+        case WAVE_FORMAT_PCM:
+        case WAVE_FORMAT_IMA_XBOX:
+          break;
+        default:
+          throw std::runtime_error("Unknown WAVE format");
+      }
       UTILS::bin_read(in, c.m_num_channels);
       UTILS::bin_read(in, c.m_sample_rate);
       UTILS::bin_read(in, c.m_bytes_rate);
@@ -69,9 +77,20 @@ std::istream &operator>>(std::istream &in, WavHeader &c) {
       if (chunk_size > 0) {
         uint16_t extended_size;
         UTILS::bin_read(in, extended_size);
-        UTILS::bin_read(in, c.m_frame_size);
-        riff_size -= 4;
-        chunk_size -= 4;
+        riff_size -= 2;
+        chunk_size -= 2;
+        if (extended_size > 0) {
+          if (c.m_audio_format == WAVE_FORMAT_IMA_XBOX) {
+            UTILS::bin_read(in, c.m_frame_size);
+            riff_size -= 2;
+            chunk_size -= 2;
+          } else {
+            // Just skip extended data
+            in.seekg(extended_size, std::ios::cur);
+            riff_size -= extended_size;
+            chunk_size -= extended_size;
+          }
+        }
       }
       break;
     }
@@ -90,6 +109,10 @@ std::istream &operator>>(std::istream &in, WavHeader &c) {
       break;
     }
     }
+    failsafe--;
+  }
+  if (failsafe == 0) {
+    throw std::runtime_error("Failed to parse WAV header (infinite parse loop occurs)!");
   }
   // Seek to sample data position for convenient
   in.seekg(data_position, std::ios::beg);

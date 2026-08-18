@@ -44,7 +44,12 @@ Fsb::Fsb(const std::filesystem::path &input_path) {
     auto it = node["fsb"]["samples"].begin();
 
     auto sample_header = it.operator*().as<FsbSampleHeader>();
-    sample_header.m_lengthcompressedbytes = GetWavSampleRawSize(input_path / sample_header.m_realname);
+    try {
+      sample_header.m_lengthcompressedbytes = GetWavSampleRawSize(input_path / sample_header.m_realname);
+    } catch (const std::exception& e) {
+      std::cerr << std::format("Failed to open WAV-file: {}", e.what()) << std::endl;
+      exit(-1);
+    }
     // Actual data can be 16-bit aligned, rounding
     // TODO: Only ADPCM accounted
     sample_header.m_lengthsamples = sample_header.m_lengthcompressedbytes / 36 * 64;
@@ -59,7 +64,12 @@ Fsb::Fsb(const std::filesystem::path &input_path) {
 
     for ( ; it != node["fsb"]["samples"].end(); ++it) {
       sample_header.m_realname = it.operator*()["real_name"].as<std::string>();
-      sample_header.m_lengthcompressedbytes = GetWavSampleRawSize(input_path / sample_header.m_realname);
+      try {
+        sample_header.m_lengthcompressedbytes = GetWavSampleRawSize(input_path / sample_header.m_realname);
+      } catch (const std::exception& e) {
+        std::cerr << "Failed to open WAV-file " << input_path / sample_header.m_realname << ": " << e.what() << std::endl;
+        exit(-1);
+      }
       // TODO: Only ADPCM accounted
       sample_header.m_lengthsamples = sample_header.m_lengthcompressedbytes / 36 * 64;
       m_header.m_datasize += sample_header.m_lengthcompressedbytes;
@@ -70,7 +80,12 @@ Fsb::Fsb(const std::filesystem::path &input_path) {
     // TODO: uncovered and untested
     for (auto it : node["fsb"]["samples"]) {
       auto sample_header = it.as<FsbSampleHeader>();
-      sample_header.m_lengthcompressedbytes = GetWavSampleRawSize(input_path / sample_header.m_realname);
+      try {
+        sample_header.m_lengthcompressedbytes = GetWavSampleRawSize(input_path / sample_header.m_realname);
+      } catch (const std::exception& e) {
+        std::cerr << "Failed to open WAV-file " << input_path / sample_header.m_realname << ": " << e.what() << std::endl;
+        exit(-1);
+      }
       // TODO: Only ADPCM accounted
       sample_header.m_lengthsamples = sample_header.m_lengthcompressedbytes / 36 * 64;
       m_header.m_datasize += sample_header.m_lengthcompressedbytes;
