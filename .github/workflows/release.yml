@@ -31,9 +31,9 @@ jobs:
 
       - name: Build and package
         run: |
-          cmake --preset ninja 
-          cmake --build --preset ninja
-          cpack --preset ninja
+          cmake --preset ninja-release-windows-static-md
+          cmake --build --preset ninja-release-windows-static-md
+          cpack --preset ninja-release-windows-static-md
 
       - name: Create release and upload assets
         shell: pwsh
