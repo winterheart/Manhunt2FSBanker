@@ -11,6 +11,7 @@ jobs:
     env:
       CXX: "cl"
       VCPKG_DEFAULT_TRIPLET: "x64-windows-static-md"
+      VCPKG_DEFAULT_HOST_TRIPLET: "x64-windows-static-md"
     steps:
       - name: "Checkout"
         uses: actions/checkout@v7
