@@ -10,7 +10,7 @@ jobs:
     name: 'Build executable and package'
     env:
       CXX: "cl"
-      VCPKG_TARGET_TRIPLET: "x64-windows-static-md"
+      VCPKG_DEFAULT_TRIPLET: "x64-windows-static-md"
     steps:
       - name: "Checkout"
         uses: actions/checkout@v7
