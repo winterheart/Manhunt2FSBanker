@@ -23,7 +23,7 @@ jobs:
           - { os: "windows-latest", cxx: "cl", triplet: "x64-windows-static-md" }
     env:
       CXX: ${{ matrix.config.cxx }}
-      VCPKG_TARGET_TRIPLET: ${{ matrix.triplet }}
+      VCPKG_TARGET_TRIPLET: ${{ matrix.config.triplet }}
     steps:
       - name: "Checkout"
         uses: actions/checkout@v7
